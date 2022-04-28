@@ -21,19 +21,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 <h1>無料ＱＲリーダー</h1>
-<h5>カメラの使用許可のダイアログが出たら、許可してください。</h5>
+<h5 id="code">カメラの使用許可のダイアログが出たら、許可してください。</h5>
 <hr />
 <video id="camera" width="150" height="100" autoplay muted playsinline></video>
 <canvas id="screen" width="150" height="100"></canvas>
-<hr />
-<span id="code"></span>
 <hr />
 <a href="https://github.com/Yoshiaki110/pakupaku/">プログラムソースはこちら</a>
 <br />
 <br />
 フォトスタジオの紹介サービスやっています。<a href="http://ptc.canon.jp">フォトッチ http://ptc.canon.jp </a> 見に来てね！
-
-
 
 <script src="https://cozmo.github.io/jsQR/jsQR.js"></script>
 <script>
@@ -85,8 +81,8 @@ function init() {
     video: {
       width: 300,
       height: 300,
-      facingMode: "user"   // フロントカメラを利用する
-      // facingMode: { exact: "environment" }  // リアカメラを利用する場合
+      //facingMode: "user"   // フロントカメラを利用する
+      facingMode: { exact: "environment" }  // リアカメラを利用する場合
     }
   };
 
