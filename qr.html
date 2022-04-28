@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>無料ＱＲリーダー</title>
+  <meta name="title" content="無料ＱＲリーダー" />
+  <meta name="description" content="ＱＲコード内容を表示するだけです、他ページやアプリに飛ぶことは、ありません。内容を確認したいときお使いください。もちろん無料です。" />
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KF9BHQV');</script>
+<!-- End Google Tag Manager -->
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KF9BHQV"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<h1>無料ＱＲリーダー</h1>
+<h5>カメラの使用許可のダイアログが出たら、許可してください。</h5>
+<hr />
+<video id="camera" width="150" height="100" autoplay muted playsinline></video>
+<canvas id="screen" width="150" height="100"></canvas>
+<hr />
+<span id="code"></span>
+<hr />
+<a href="https://github.com/Yoshiaki110/pakupaku/">プログラムソースはこちら</a>
+<br />
+<br />
+フォトスタジオの紹介サービスやっています。<a href="http://ptc.canon.jp">フォトッチ http://ptc.canon.jp </a> 見に来てね！
+
+
+
+<script src="https://cozmo.github.io/jsQR/jsQR.js"></script>
+<script>
+
+// HTMLロード後に実行
+window.onload = (event)=>{
+  console.log("onload!");
+  init();
+}
+
+// メインプログラム
+function init() {
+  const CVS_WIDTH = document.documentElement.clientWidth > document.documentElement.clientHeight ? document.documentElement.clientHeight : document.documentElement.clientWidth;
+  const CVS_HEIGHT = CVS_WIDTH;
+  const videoElm  = document.querySelector("#camera");
+  const canvasElm = document.querySelector("#screen");
+  // 不要な画像を隠す
+  videoElm.style.display ="none";
+  // 左右反転(鏡面)表示
+  canvasElm.width = CVS_WIDTH;
+  canvasElm.height = CVS_HEIGHT;
+  const ctx = canvasElm.getContext("2d");
+
+  // 100ms毎に定期実行
+  function decode() {
+    // canvasに画像を貼り付ける
+    ctx.drawImage(videoElm, 0, 0, canvasElm.width, canvasElm.height);
+
+    // デコード 
+    const imageData = ctx.getImageData(0, 0, canvasElm.width, canvasElm.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "dontInvert",
+    });
+    // デコード出来たら、内容と枠を表示
+    if (code && code.data) {
+      document.getElementById("code").innerHTML = code.data;
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 5;
+      width = code.location.bottomRightCorner.x - code.location.topLeftCorner.x;
+      height = code.location.bottomRightCorner.y - code.location.topLeftCorner.y;
+      ctx.strokeRect(code.location.topLeftCorner.x, code.location.topLeftCorner.y, width, height);
+    }
+    setTimeout(decode, 100);
+  }
+
+  // カメラ設定
+  const constraints = {
+    audio: false,
+    video: {
+      width: 300,
+      height: 300,
+      facingMode: "user"   // フロントカメラを利用する
+      // facingMode: { exact: "environment" }  // リアカメラを利用する場合
+    }
+  };
+
+  // カメラを<video>と同期
+  navigator.mediaDevices.getUserMedia(constraints)
+  .then( function(stream) {
+    videoElm.srcObject = stream;
+    videoElm.onloadedmetadata = function(e) {
+      videoElm.play();
+    };
+  })
+  .catch( function(err) {
+    console.log(err.name + ": " + err.message);
+  });
+  decode();
+}
+</script>
+
+</body>
+</html>
