@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html><body>
+    {% if isAuthed %}
+        <p>ログイン成功</p>
+        <form method="post" action="/">
+            「水を <input type="number" id="msg" name="msg"> mL飲んだ」
+            <input type="submit" value="Tweet message!">
+        </form>
+    {% else %}
+        <p>ログインしてください</p>
+        <p><a href="{{ url_for('twitter_auth') }}">Twitter認証</a></p>
+    {% endif %}
+</body></html>
