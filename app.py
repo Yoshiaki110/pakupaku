@@ -19,6 +19,12 @@ CALLBACK_URL = os.environ['CALLBACK_URL']           # デプロイURL
 app.config['SECRET_KEY'] = os.urandom(24)
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
 
+def reset():
+    #global app
+    #app.config['SECRET_KEY'] = os.urandom(24)
+    global auth
+    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     #global auth
@@ -61,7 +67,11 @@ def index():
 @app.route('/twitter_auth', methods=['GET'])
 def twitter_auth():
     print("** /twitter_auth")
-    redirect_url = auth.get_authorization_url()
+    try:
+        redirect_url = auth.get_authorization_url()
+    except:
+        reset()
+        redirect_url = auth.get_authorization_url()
     print("redirect_url : ", redirect_url)
     return redirect(redirect_url)
 
