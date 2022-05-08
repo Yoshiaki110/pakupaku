@@ -62,6 +62,7 @@ def index():
 def twitter_auth():
     print("** /twitter_auth")
     redirect_url = auth.get_authorization_url()
+    print("redirect_url : ", redirect_url)
     return redirect(redirect_url)
 
 # トップページ
