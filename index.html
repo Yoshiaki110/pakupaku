@@ -41,9 +41,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 
 
-<script src="./faceapi/js/face-api.min.js"></script>
+<script src="./static/faceapi/js/face-api.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
 <script>
+const SERVER = "";
 const BASEPATH = "./";
+const IMGPATH = BASEPATH + "static/game/pakupaku/";
 
 // HTMLロード後に実行
 window.onload = (event)=>{
@@ -89,7 +92,7 @@ async function init() {
   msgElm.style.width = CVS_WIDTH + 'px';
   // 初期画面表示
   const top = new Image();
-  top.src = BASEPATH + "game/pakupaku/top.png";
+  top.src = IMGPATH + "top.png";
   top.onload = function() {
     const canvas = document.createElement('canvas');
     canvas.width = top.width;
@@ -102,31 +105,31 @@ async function init() {
   }
   // フルーツ画像
   const dokuringo = new Image();
-  dokuringo.src = BASEPATH + "game/pakupaku/dokuringo.png";
+  dokuringo.src = IMGPATH + "dokuringo.png";
   const ichigo = new Image();
-  ichigo.src = BASEPATH + "game/pakupaku/ichigo.png";
+  ichigo.src = IMGPATH + "ichigo.png";
   const kiwi = new Image();
-  kiwi.src = BASEPATH + "game/pakupaku/kiwi.png";
+  kiwi.src = IMGPATH + "kiwi.png";
   const melon = new Image();
-  melon.src = BASEPATH + "game/pakupaku/melon.png";
+  melon.src = IMGPATH + "melon.png";
   const mikan = new Image();
-  mikan.src = BASEPATH + "game/pakupaku/mikan.png";
+  mikan.src = IMGPATH + "mikan.png";
   const momo = new Image();
-  momo.src = BASEPATH + "game/pakupaku/momo.png";
+  momo.src = IMGPATH + "momo.png";
   const suika = new Image();
-  suika.src = BASEPATH + "game/pakupaku/suika.png";
+  suika.src = IMGPATH + "suika.png";
   const hoshi = new Image();
-  hoshi.src = BASEPATH + "game/pakupaku/hoshi.png";
+  hoshi.src = IMGPATH + "hoshi.png";
   // 音源
-  const o_paku = new Audio(BASEPATH + "game/pakupaku/paku.mp3");
+  const o_paku = new Audio(IMGPATH + "paku.mp3");
   
-  const o_start = new Audio(BASEPATH + "game/pakupaku/start.mp3");
-  const o_end = new Audio(BASEPATH + "game/pakupaku/end.mp3");
+  const o_start = new Audio(IMGPATH + "start.mp3");
+  const o_end = new Audio(IMGPATH + "end.mp3");
 
 
   // モデル読み込み　※フォルダを指定
-  await faceapi.nets.tinyFaceDetector.load(BASEPATH + "faceapi/models/");
-  await faceapi.nets.faceLandmark68Net.load(BASEPATH + "faceapi/models/");
+  await faceapi.nets.tinyFaceDetector.load(BASEPATH + "static/faceapi/models/");
+  await faceapi.nets.faceLandmark68Net.load(BASEPATH + "static/faceapi/models/");
   // グローバル変数
   var videoOn = false;
   var timer = 0;
@@ -134,6 +137,26 @@ async function init() {
   var items = [];
 
   scoreElm.innerHTML = "スタートボタンで開始します";
+
+  // tweet
+  function api() {
+    var id = results.shift();
+    var canvas = document.createElement('canvas');
+    canvas.width = canvasElm.width;
+    canvas.height = canvasElm.height;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(canvasElm, 0, 0, canvasElm.width, canvasElm.height);
+    var params = new FormData();
+    var base64_png = canvas.toDataURL("image/png");
+    params.append('image', base64_png);
+    // API呼び出し
+    axios.post(SERVER + '/api/tweet', params).then(function(response) {
+      console.log('** /api/tweet');
+      //dt = response.data;
+    }).catch(function(error) {
+      alert("エラー:" + error);
+    });
+  }
 
   // 落ちフルーツの追加
   function addItem(first) {
@@ -203,6 +226,7 @@ async function init() {
       o_end.play();
       scoreElm.innerHTML = "落としてしまいました、終了です <strong>スコア：" + score + "</strong>";
       buttonElm.disabled = false;
+      api();
       return;
     }
 
@@ -239,6 +263,7 @@ async function init() {
             o_end.play();
             scoreElm.innerHTML = "毒リンゴを食べました、終了です <strong>スコア：" + score + "</strong>";
             buttonElm.disabled = false;
+            api();
             return;
           }
         }

@@ -5,40 +5,78 @@
 
 import os
 import tweepy
-from flask import Flask, redirect, render_template, request
+from flask import Flask, redirect, render_template, request, jsonify, make_response
+import base64
+import uuid
+from PIL import Image
+from io import BytesIO
+
 app = Flask(__name__)
 
-CONSUMER_KEY = os.environ['CONSUMER_KEY'] # API Key
-CONSUMER_SECRET = os.environ['CONSUMER_SECRET'] # API Key Secret
-CALLBACK_URL = os.environ['CALLBACK_URL'] # デプロイURL
+CONSUMER_KEY = os.environ['CONSUMER_KEY']           # API Key
+CONSUMER_SECRET = os.environ['CONSUMER_SECRET']     # API Key Secret
+CALLBACK_URL = os.environ['CALLBACK_URL']           # デプロイURL
 app.config['SECRET_KEY'] = os.urandom(24)
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    uid = request.cookies.get('uid', None)
+    if not uid:
+        uid = str(str(uuid.uuid4()))
     if request.method == 'GET':
         oauth_token = request.args.get('oauth_token', default = None, type=str)
-        oauth_verifier = request.args.get('oauth_verifier',default = None, type=str)
+        oauth_verifier = request.args.get('oauth_verifier', default = None, type=str)
         if oauth_token == None:
-            return render_template("index.html", isAuthed = False)
+            # 未ログイン
+            #return render_template("index.html", isAuthed = False)
+            resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
+            resp.set_cookie('uid', uid)
+            return resp
         try:
             auth.request_token['oauth_token_secret'] = oauth_verifier
             auth.get_access_token(oauth_verifier)
         except Exception as e:
             return ''' <p>エラー</p> '''
-        return render_template("index.html", isAuthed = True)
+        # ログイン済み
+        #return render_template("index.html", isAuthed = True)
+        resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+        resp.set_cookie('uid', uid)
+        return resp
+
     elif request.method == 'POST':
         auth.set_access_token(auth.access_token, auth.access_token_secret)
         api = tweepy.API(auth)
         msg = "水を " + str(request.form["msg"]) + " mL飲んだ"
-        api.update_status(msg)
-        return render_template("index.html", isAuthed = True)
+        #api.update_status(msg)
+        #return render_template("index.html", isAuthed = True)
+        resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+        resp.set_cookie('uid', uid)
+        return resp
 
 @app.route('/twitter_auth', methods=['GET'])
 def twitter_auth():
     redirect_url = auth.get_authorization_url()
     return redirect(redirect_url)
 
+# トップページ
+@app.route('/pakupaku')
+def pakupaku():
+    print("** /pakupaku")
+    return render_template('pakupaku.html')
+
+@app.route("/api/tweet", methods=['POST'])
+def api_similar():
+    print("** /api/tweet start")
+    base64_png = request.form['image']
+    code = base64.b64decode(base64_png.split(',')[1])  # remove header
+    image_decoded = Image.open(BytesIO(code))
+    fname = os.path.join('./', str(str(uuid.uuid4())) + '.png')
+    image_decoded.save(fname)
+
+    os.remove(fname)
+    print("** /api/tweet end")
+    return jsonify({})
 
 if __name__ == '__main__':
   app.run(debug=True)
