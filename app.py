@@ -21,7 +21,7 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global auth
+    #global auth
     print("** /  " + request.method)
     #uid = request.cookies.get('uid', None)
     #if not uid:
@@ -31,8 +31,8 @@ def index():
         oauth_verifier = request.args.get('oauth_verifier', default = None, type=str)
         if oauth_token == None:
             # 未ログイン
-            auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
-            redirect_url = auth.get_authorization_url()
+            #auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
+            #redirect_url = auth.get_authorization_url()
             return render_template("index.html", isAuthed = False)
             #resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
             #resp.set_cookie('uid', uid)
