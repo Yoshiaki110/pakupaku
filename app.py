@@ -21,6 +21,8 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global auth
+    print("** /  " + request.method)
     #uid = request.cookies.get('uid', None)
     #if not uid:
     #    uid = str(str(uuid.uuid4()))
@@ -29,16 +31,18 @@ def index():
         oauth_verifier = request.args.get('oauth_verifier', default = None, type=str)
         if oauth_token == None:
             # 未ログイン
+            auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
+            redirect_url = auth.get_authorization_url()
             return render_template("index.html", isAuthed = False)
             #resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
             #resp.set_cookie('uid', uid)
             #return resp
+        # ログイン済み
         try:
             auth.request_token['oauth_token_secret'] = oauth_verifier
             auth.get_access_token(oauth_verifier)
         except Exception as e:
             return ''' <p>エラー</p> '''
-        # ログイン済み
         return render_template("index.html", isAuthed = True)
         #resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
         #resp.set_cookie('uid', uid)
@@ -56,6 +60,7 @@ def index():
 
 @app.route('/twitter_auth', methods=['GET'])
 def twitter_auth():
+    print("** /twitter_auth")
     redirect_url = auth.get_authorization_url()
     return redirect(redirect_url)
 

@@ -138,26 +138,6 @@ async function init() {
 
   scoreElm.innerHTML = "スタートボタンで開始します";
 
-  // tweet
-  function api() {
-    var id = results.shift();
-    var canvas = document.createElement('canvas');
-    canvas.width = canvasElm.width;
-    canvas.height = canvasElm.height;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(canvasElm, 0, 0, canvasElm.width, canvasElm.height);
-    var params = new FormData();
-    var base64_png = canvas.toDataURL("image/png");
-    params.append('image', base64_png);
-    // API呼び出し
-    axios.post(SERVER + '/api/tweet', params).then(function(response) {
-      console.log('** /api/tweet');
-      //dt = response.data;
-    }).catch(function(error) {
-      alert("エラー:" + error);
-    });
-  }
-
   // 落ちフルーツの追加
   function addItem(first) {
     if (!first) {
@@ -226,7 +206,6 @@ async function init() {
       o_end.play();
       scoreElm.innerHTML = "落としてしまいました、終了です <strong>スコア：" + score + "</strong>";
       buttonElm.disabled = false;
-      api();
       return;
     }
 
@@ -263,7 +242,6 @@ async function init() {
             o_end.play();
             scoreElm.innerHTML = "毒リンゴを食べました、終了です <strong>スコア：" + score + "</strong>";
             buttonElm.disabled = false;
-            api();
             return;
           }
         }
