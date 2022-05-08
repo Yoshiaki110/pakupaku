@@ -21,38 +21,38 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    uid = request.cookies.get('uid', None)
-    if not uid:
-        uid = str(str(uuid.uuid4()))
+    #uid = request.cookies.get('uid', None)
+    #if not uid:
+    #    uid = str(str(uuid.uuid4()))
     if request.method == 'GET':
         oauth_token = request.args.get('oauth_token', default = None, type=str)
         oauth_verifier = request.args.get('oauth_verifier', default = None, type=str)
         if oauth_token == None:
             # 未ログイン
-            #return render_template("index.html", isAuthed = False)
-            resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
-            resp.set_cookie('uid', uid)
-            return resp
+            return render_template("index.html", isAuthed = False)
+            #resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
+            #resp.set_cookie('uid', uid)
+            #return resp
         try:
             auth.request_token['oauth_token_secret'] = oauth_verifier
             auth.get_access_token(oauth_verifier)
         except Exception as e:
             return ''' <p>エラー</p> '''
         # ログイン済み
-        #return render_template("index.html", isAuthed = True)
-        resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
-        resp.set_cookie('uid', uid)
-        return resp
+        return render_template("index.html", isAuthed = True)
+        #resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+        #resp.set_cookie('uid', uid)
+        #return resp
 
     elif request.method == 'POST':
         auth.set_access_token(auth.access_token, auth.access_token_secret)
         api = tweepy.API(auth)
         msg = "水を " + str(request.form["msg"]) + " mL飲んだ"
         #api.update_status(msg)
-        #return render_template("index.html", isAuthed = True)
-        resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
-        resp.set_cookie('uid', uid)
-        return resp
+        return render_template("index.html", isAuthed = True)
+        #resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+        #resp.set_cookie('uid', uid)
+        #return resp
 
 @app.route('/twitter_auth', methods=['GET'])
 def twitter_auth():
