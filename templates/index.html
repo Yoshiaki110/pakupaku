@@ -10,5 +10,25 @@
     {% else %}
         <p>ログインしてください</p>
         <p><a href="{{ url_for('twitter_auth') }}">Twitter認証</a></p>
+        <button type="button" onclick="login()">Twitterにログインして投稿</button>
     {% endif %}
+    <button type="button" onclick="submit()">POST</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+<script>
+    // Twitterログインページへ遷移
+    function login() {
+        window.location.href = "{{ url_for('twitter_auth') }}"
+    }
+    // API呼び出し
+    function submit() {
+        var params = new FormData();
+        params.append('msg', 123);
+        axios.post('/', params).then(function(response) {
+            console.log('** /');
+        //dt = response.data;
+        }).catch(function(error) {
+            alert("エラー:" + error);
+        });
+    }
+</script>
 </body></html>
