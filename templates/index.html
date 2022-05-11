@@ -4,7 +4,7 @@
     {% if isAuthed %}
         <p>ログイン成功</p>
         <form method="post" action="/">
-            「水を <input type="number" id="msg" name="msg"> mL飲んだ」
+            <input type="text" id="msg" name="msg">
             <input type="submit" value="Tweet message!">
         </form>
     {% else %}
@@ -21,8 +21,9 @@
     }
     // API呼び出し
     function submit() {
+        var msg = document.getElementById("msg").value;
         var params = new FormData();
-        params.append('msg', 123);
+        params.append('msg', msg);
         axios.post('/', params).then(function(response) {
             console.log('** /');
         //dt = response.data;

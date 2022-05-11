@@ -54,8 +54,16 @@ def index():
     elif request.method == 'POST':
         auth.set_access_token(auth.access_token, auth.access_token_secret)
         api = tweepy.API(auth)
-        msg = "Drink " + str(request.form["msg"]) + " mL Water"
-        api.update_status(msg)
+        #msg = "Drink " + str(request.form["msg"]) + " mL Water"
+        #api.update_status(msg)
+        msg = request.form["msg"]
+        listImages = ["./static/img/photochi.png"]
+        media_ids = []
+        for image in listImages:
+            img = api.media_upload(image)
+            media_ids.append(img.media_id)
+        api.update_status(status=msg, media_ids=media_ids)
+
         #return render_template("index.html", isAuthed = True)
         print('** tweet **', msg)
         resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
