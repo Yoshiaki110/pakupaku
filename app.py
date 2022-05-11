@@ -55,7 +55,7 @@ def index():
         auth.set_access_token(auth.access_token, auth.access_token_secret)
         api = tweepy.API(auth)
         msg = "Drink " + str(request.form["msg"]) + " mL Water"
-        #api.update_status(msg)
+        api.update_status(msg)
         #return render_template("index.html", isAuthed = True)
         print('** tweet **', msg)
         resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
