@@ -17,7 +17,8 @@ CONSUMER_KEY = os.environ['CONSUMER_KEY']           # API Key
 CONSUMER_SECRET = os.environ['CONSUMER_SECRET']     # API Key Secret
 CALLBACK_URL = os.environ['CALLBACK_URL']           # デプロイURL
 app.config['SECRET_KEY'] = os.urandom(24)
-auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
+AUTH_TBL = {}
+#auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
 
 def reset():
     global auth
@@ -42,6 +43,7 @@ def index():
             return resp
         # ログイン済み
         try:
+            auth = AUTH_TBL[uid]
             auth.request_token['oauth_token_secret'] = oauth_verifier
             auth.get_access_token(oauth_verifier)
         except Exception as e:
@@ -52,6 +54,7 @@ def index():
         return resp
 
     elif request.method == 'POST':
+        auth = AUTH_TBL[uid]
         auth.set_access_token(auth.access_token, auth.access_token_secret)
         api = tweepy.API(auth)
         #msg = "Drink " + str(request.form["msg"]) + " mL Water"
@@ -73,6 +76,11 @@ def index():
 @app.route('/twitter_auth', methods=['GET'])
 def twitter_auth():
     print("** /twitter_auth")
+    uid = request.cookies.get('uid', None)
+    if not uid:
+        uid = str(str(uuid.uuid4()))
+    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
+    AUTH_TBL[uid] = auth
     try:
         redirect_url = auth.get_authorization_url()
     except:
