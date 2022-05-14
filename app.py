@@ -18,8 +18,11 @@ CONSUMER_SECRET = os.environ['CONSUMER_SECRET']     # API Key Secret
 CALLBACK_URL = os.environ['CALLBACK_URL']           # デプロイURL
 app.config['SECRET_KEY'] = os.urandom(24)
 AUTH_TBL = {}
+IMG_TBL = {}
 
-def tweet(auth, msg, imgfile):
+# ツイート
+def tweet(auth, imgfile):
+    msg = ''
     api = tweepy.API(auth)
     media_ids = []
     img = api.media_upload(imgfile)
@@ -30,6 +33,7 @@ def tweet(auth, msg, imgfile):
 @app.route('/')
 def index():
     print("** /  " + request.method)
+    isAuthed = False
     uid = request.cookies.get('uid', None)
     if not uid:
         uid = str(str(uuid.uuid4()))
@@ -39,17 +43,28 @@ def index():
     print("oauth_verifier : ", oauth_verifier)
     if oauth_token == None:
         # 未ログイン
-        resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
+        print('未ログイン')
+        resp = make_response(render_template("index.html", isAuthed = isAuthed, uid = uid))
         resp.set_cookie('uid', uid)
         return resp
     # ログイン済み
+    print('ログイン済み')
     try:
         auth = AUTH_TBL[uid]
         auth.request_token['oauth_token_secret'] = oauth_verifier
         auth.get_access_token(oauth_verifier)
+        isAuthed = True
+
+        # ツイートがある場合
+        imgfile = IMG_TBL[uid]
+        if imgfile:
+            tweet(auth, imgfile)
+            os.remove(imgfile)
+            del IMG_TBL[uid]
     except Exception as e:
-        return ''' <p>エラー</p> '''
-    resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+        #return ''' <p>エラー</p> '''
+        pass
+    resp = make_response(render_template("index.html", isAuthed = isAuthed, uid = uid))
     resp.set_cookie('uid', uid)
     return resp
 
@@ -70,7 +85,7 @@ def api_tweet():
     auth.set_access_token(auth.access_token, auth.access_token_secret)
     msg = request.form["msg"]
     imgfile = "./static/img/photochi.png"
-    tweet(auth, msg, imgfile)
+    tweet(auth, imgfile)
 
     resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
     resp.set_cookie('uid', uid)
@@ -102,9 +117,20 @@ def api_img():
     image_decoded = Image.open(BytesIO(code))
     fname = os.path.join('./', str(str(uuid.uuid4())) + '.png')
     image_decoded.save(fname)
+    uid = request.cookies.get('uid', None)
+    if not uid:
+        print('ここにくることはないはず')
+        uid = str(str(uuid.uuid4()))
+    if id in AUTH_TBL:
+        print('既にログインしているので、そのままツイート')
+        auth = AUTH_TBL[uid]
+        tweet(auth, fname)
+        os.remove(fname)
+    else:
+        print('ログイン後にツイートする')
+        IMG_TBL[uid] = fname
 
-    os.remove(fname)
-    print("** /api/tweet end")
+    #os.remove(fname)
     return jsonify({})
 
 if __name__ == '__main__':
