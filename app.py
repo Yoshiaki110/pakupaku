@@ -27,54 +27,58 @@ def tweet(auth, msg, imgfile):
     api.update_status(status=msg, media_ids=media_ids)
     print('** tweet **', msg)
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
     print("** /  " + request.method)
     uid = request.cookies.get('uid', None)
     if not uid:
         uid = str(str(uuid.uuid4()))
-    if request.method == 'GET':
-        oauth_token = request.args.get('oauth_token', default = None, type=str)
-        print("oauth_token : ", oauth_token)
-        oauth_verifier = request.args.get('oauth_verifier', default = None, type=str)
-        print("oauth_verifier : ", oauth_verifier)
-        if oauth_token == None:
-            # 未ログイン
-            resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
-            resp.set_cookie('uid', uid)
-            return resp
-        # ログイン済み
-        try:
-            auth = AUTH_TBL[uid]
-            auth.request_token['oauth_token_secret'] = oauth_verifier
-            auth.get_access_token(oauth_verifier)
-        except Exception as e:
-            return ''' <p>エラー</p> '''
-        resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+    oauth_token = request.args.get('oauth_token', default = None, type=str)
+    print("oauth_token : ", oauth_token)
+    oauth_verifier = request.args.get('oauth_verifier', default = None, type=str)
+    print("oauth_verifier : ", oauth_verifier)
+    if oauth_token == None:
+        # 未ログイン
+        resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
         resp.set_cookie('uid', uid)
         return resp
+    # ログイン済み
+    try:
+        auth = AUTH_TBL[uid]
+        auth.request_token['oauth_token_secret'] = oauth_verifier
+        auth.get_access_token(oauth_verifier)
+    except Exception as e:
+        return ''' <p>エラー</p> '''
+    resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+    resp.set_cookie('uid', uid)
+    return resp
 
-    elif request.method == 'POST':
-        try:
-            auth = AUTH_TBL[uid]
-        except:
-            # セッションが切れた場合
-            print('セッションが切れた', uid)
-            resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
-            resp.set_cookie('uid', uid)
-            return resp
-        auth.set_access_token(auth.access_token, auth.access_token_secret)
-        msg = request.form["msg"]
-        imgfile = "./static/img/photochi.png"
-        tweet(auth, msg, imgfile)
-
-        resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+@app.route('/api/tweet', methods=['POST'])
+def api_tweet():
+    print("** /api/tweet  " + request.method)
+    uid = request.cookies.get('uid', None)
+    if not uid:
+        uid = str(str(uuid.uuid4()))
+    try:
+        auth = AUTH_TBL[uid]
+    except:
+        # セッションが切れた場合
+        print('セッションが切れた', uid)
+        resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
         resp.set_cookie('uid', uid)
         return resp
+    auth.set_access_token(auth.access_token, auth.access_token_secret)
+    msg = request.form["msg"]
+    imgfile = "./static/img/photochi.png"
+    tweet(auth, msg, imgfile)
+
+    resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
+    resp.set_cookie('uid', uid)
+    return resp
 
 @app.route('/twitter_auth', methods=['GET'])
 def twitter_auth():
-    print("** /twitter_auth")
+    print("** /twitter_auth  " + request.method)
     uid = request.cookies.get('uid', None)
     if not uid:
         uid = str(str(uuid.uuid4()))
@@ -87,12 +91,12 @@ def twitter_auth():
 # トップページ
 @app.route('/pakupaku')
 def pakupaku():
-    print("** /pakupaku")
+    print("** /pakupaku  " + request.method)
     return render_template('pakupaku.html')
 
-@app.route("/api/tweet", methods=['POST'])
-def api_tweet():
-    print("** /api/tweet start")
+@app.route("/api/img", methods=['POST'])
+def api_img():
+    print("** /api/img start  " + request.method)
     base64_png = request.form['image']
     code = base64.b64decode(base64_png.split(',')[1])  # remove header
     image_decoded = Image.open(BytesIO(code))
