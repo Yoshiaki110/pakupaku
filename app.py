@@ -18,11 +18,14 @@ CONSUMER_SECRET = os.environ['CONSUMER_SECRET']     # API Key Secret
 CALLBACK_URL = os.environ['CALLBACK_URL']           # デプロイURL
 app.config['SECRET_KEY'] = os.urandom(24)
 AUTH_TBL = {}
-#auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
 
-def reset():
-    global auth
-    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
+def tweet(auth, msg, imgfile):
+    api = tweepy.API(auth)
+    media_ids = []
+    img = api.media_upload(imgfile)
+    media_ids.append(img.media_id)
+    api.update_status(status=msg, media_ids=media_ids)
+    print('** tweet **', msg)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -37,7 +40,6 @@ def index():
         print("oauth_verifier : ", oauth_verifier)
         if oauth_token == None:
             # 未ログイン
-            #return render_template("index.html", isAuthed = False)
             resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
             resp.set_cookie('uid', uid)
             return resp
@@ -48,27 +50,24 @@ def index():
             auth.get_access_token(oauth_verifier)
         except Exception as e:
             return ''' <p>エラー</p> '''
-        #return render_template("index.html", isAuthed = True)
         resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
         resp.set_cookie('uid', uid)
         return resp
 
     elif request.method == 'POST':
-        auth = AUTH_TBL[uid]
+        try:
+            auth = AUTH_TBL[uid]
+        except:
+            # セッションが切れた場合
+            print('セッションが切れた', uid)
+            resp = make_response(render_template("index.html", isAuthed = False, uid = uid))
+            resp.set_cookie('uid', uid)
+            return resp
         auth.set_access_token(auth.access_token, auth.access_token_secret)
-        api = tweepy.API(auth)
-        #msg = "Drink " + str(request.form["msg"]) + " mL Water"
-        #api.update_status(msg)
         msg = request.form["msg"]
-        listImages = ["./static/img/photochi.png"]
-        media_ids = []
-        for image in listImages:
-            img = api.media_upload(image)
-            media_ids.append(img.media_id)
-        api.update_status(status=msg, media_ids=media_ids)
+        imgfile = "./static/img/photochi.png"
+        tweet(auth, msg, imgfile)
 
-        #return render_template("index.html", isAuthed = True)
-        print('** tweet **', msg)
         resp = make_response(render_template("index.html", isAuthed = True, uid = uid))
         resp.set_cookie('uid', uid)
         return resp
@@ -81,11 +80,7 @@ def twitter_auth():
         uid = str(str(uuid.uuid4()))
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK_URL)
     AUTH_TBL[uid] = auth
-    try:
-        redirect_url = auth.get_authorization_url()
-    except:
-        reset()
-        redirect_url = auth.get_authorization_url()
+    redirect_url = auth.get_authorization_url()
     print("redirect_url : ", redirect_url)
     return redirect(redirect_url)
 
@@ -96,7 +91,7 @@ def pakupaku():
     return render_template('pakupaku.html')
 
 @app.route("/api/tweet", methods=['POST'])
-def api_similar():
+def api_tweet():
     print("** /api/tweet start")
     base64_png = request.form['image']
     code = base64.b64decode(base64_png.split(',')[1])  # remove header
