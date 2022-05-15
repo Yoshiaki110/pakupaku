@@ -20,300 +20,41 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <h1>無料ミニゲーム ぱくぱく</h1>
-<h3>空から落ちてくるフルーツをお口でキャッチ！落としたらゲームオーバー、毒リンゴに気を付けて！</h3>
-<h5>スタートボタンを押すとカメラの使用許可のダイアログが出ます、許可してください。</h5>
-<hr />
-<h5>インカメラで撮影した画像をAIで解析して口の位置を測定しています、暗い場所や逆光などで口の位置が測定できない場合があります、</h5>
-<h5>口の位置が測定できている場合、赤の枠が表示されます、赤の枠が出ていないとフルーツをキャッチできません。</h5>
-<hr />
-<a href="https://pa9pa9.azurewebsites.net"> ゲ ー ム 画 面 へ </a>
-<hr />
+<h3>ゲームの説明</h3>
+<ul>
+  <li>空から落ちてくるフルーツをお口でキャッチ！落としたらゲームオーバー、毒リンゴに気を付けて！</li>
+  <li>スタートボタンを押すとカメラの使用許可のダイアログが出ます、許可してください。</li>
+  <li>下の画像をクリックして、ゲーム画面に移動して遊びましょう！</li>
+</ul>
+<h3>注意点など</h3>
+<ul>
+  <li>インカメラで撮影した画像をAIで解析して口の位置を測定しています、暗い場所や逆光などで口の位置が測定できない場合があります、</li>
+  <li>口の位置が測定できている場合、赤の枠が表示されます、赤の枠が出ていないとフルーツをキャッチできません。</li>
+  <li>パソコンで遊ぶ場合、ブラウザのウインドウサイズを変えることで、ゲームの難易度が変わります。</li>
+</ul>
 
-<button type="button" id="start">スタート</button>
+<a href="https://pa9pa9.azurewebsites.net">
+  <h2>ゲ ー ム 画 面 へ</h2>
+  <img src="./static/game/pakupaku/pakupaku-img.png" alt="ゲーム画面" />
+</a>
+<h3>高度な設定</h3>
+<ul>
+  <li>URLパラメータでゲームの難易度を変えられます。</li>
+  <ul>
+    例）<a href="https://pa9pa9.azurewebsites.net?interval=100&speed=3&number=10">https://pa9pa9.azurewebsites.net?interval=100&speed=3&number=10</a>
+    <li>interval：ゲームのクロック数（デフォルト：100）、小さいほど難易度高</li>
+    <li>speed：フルーツの落ちるスピード（デフォルト：3）、大きいほど難易度高</li>
+    <li>number：フルーツの出現率（デフォルト：10）、大きいほど難易度高</li>
+  </ul>
+</ul>
 <hr />
-<video id="camera" width="150" height="100" autoplay muted playsinline></video>
-<canvas id="face" width="150" height="100"></canvas>
-<div style="position: relative;">
-  <canvas id="game_screen"></canvas>
-  <div id="game_message" style="position:absolute; top:0; left:0; width: 600px;">
-    <center id="score"></center>
-  </div>
-</div>
-<hr />
-<a href="https://github.com/Yoshiaki110/pakupaku/">プログラムソースはこちら</a>
-<br />
 <br />
 フォトスタジオの紹介サービスやっています。
 <a href="http://ptc.canon.jp">
   <img src="./static/img/photochi.png" alt="フォトッチ http://ptc.canon.jp" />
 </a> 見に来てね！
-
-
-
-<script src="./static/faceapi/js/face-api.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
-<script>
-const SERVER = "";
-const BASEPATH = "./";
-const IMGPATH = BASEPATH + "static/game/pakupaku/";
-
-// HTMLロード後に実行
-window.onload = (event)=>{
-  console.log("onload!");
-  init();
-}
-
-// メインプログラム
-async function init() {
-  const UE = 51;
-  const MIGI = 54;
-  const SHITA = 57;
-  const HIDARI = 48;
-//  const CVS_WIDTH = 600;
-  const CVS_WIDTH = document.documentElement.clientWidth > document.documentElement.clientHeight ? document.documentElement.clientHeight : document.documentElement.clientWidth;
-//  const CVS_HEIGHT = 400;
-//  const CVS_HEIGHT = Math.floor(CVS_WIDTH / 3 * 2);
-  const CVS_HEIGHT = CVS_WIDTH;
-  const videoElm  = document.querySelector("#camera");
-  const canvasElm = document.querySelector("#game_screen");
-  const faceElm = document.querySelector("#face");
-  const msgElm = document.querySelector("#game_message");
-  const scoreElm = document.querySelector("#score");
-  const buttonElm = document.querySelector("#start");
-  // 不要な画像を隠す
-  videoElm.style.display ="none";
-  faceElm.style.display ="none";
-  // 左右反転(鏡面)表示
-  canvasElm.width = CVS_WIDTH;
-  canvasElm.height = CVS_HEIGHT;
-  const ctx = canvasElm.getContext("2d");
-  ctx.scale(-1,1);
-  ctx.translate(-canvasElm.width, 0)
-  // 唇の色と太さ
-  ctx.fillStyle = "red";
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 4;
-  // AI解析用
-  faceElm.width = CVS_WIDTH;
-  faceElm.height = CVS_HEIGHT;
-  const faceCtx = faceElm.getContext("2d");
-  // メッセージ用
-  msgElm.style.width = CVS_WIDTH + 'px';
-  // 初期画面表示
-  const top = new Image();
-  top.src = IMGPATH + "top.png";
-  top.onload = function() {
-    const canvas = document.createElement('canvas');
-    canvas.width = top.width;
-    canvas.height = top.height;
-    const c = canvas.getContext('2d');
-    c.scale(-1,1);
-    c.translate(-canvas.width, 0)
-    c.drawImage(top, 0, 0);
-    ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, CVS_WIDTH, CVS_HEIGHT);
-  }
-  // フルーツ画像
-  const dokuringo = new Image();
-  dokuringo.src = IMGPATH + "dokuringo.png";
-  const ichigo = new Image();
-  ichigo.src = IMGPATH + "ichigo.png";
-  const kiwi = new Image();
-  kiwi.src = IMGPATH + "kiwi.png";
-  const melon = new Image();
-  melon.src = IMGPATH + "melon.png";
-  const mikan = new Image();
-  mikan.src = IMGPATH + "mikan.png";
-  const momo = new Image();
-  momo.src = IMGPATH + "momo.png";
-  const suika = new Image();
-  suika.src = IMGPATH + "suika.png";
-  const hoshi = new Image();
-  hoshi.src = IMGPATH + "hoshi.png";
-  // 音源
-  const o_paku = new Audio(IMGPATH + "paku.mp3");
-  
-  const o_start = new Audio(IMGPATH + "start.mp3");
-  const o_end = new Audio(IMGPATH + "end.mp3");
-
-
-  // モデル読み込み　※フォルダを指定
-  await faceapi.nets.tinyFaceDetector.load(BASEPATH + "static/faceapi/models/");
-  await faceapi.nets.faceLandmark68Net.load(BASEPATH + "static/faceapi/models/");
-  // グローバル変数
-  var videoOn = false;
-  var timer = 0;
-  var score = 0;
-  var items = [];
-
-  scoreElm.innerHTML = "スタートボタンで開始します";
-
-  // 落ちフルーツの追加
-  function addItem(first) {
-    if (!first) {
-      if (Math.random() * 10 < 9) {    // ２割の確率で出現しない
-        return;
-      }
-    }
-    var arr = [dokuringo,ichigo,kiwi,melon,mikan,momo,suika];
-    var c = arr[Math.floor(Math.random() * 7)];
-    var speed = 3 + Math.floor(Math.random() * 4);
-    var item = {
-      "x": 50 + Math.floor(Math.random() * (CVS_WIDTH - 150)),
-      "y": 0,
-      "ctx": c,
-      "speed": speed,
-      "angle": 0,
-      "dir": Math.floor(Math.random() * 3) - 1
-    }
-    items.push(item)
-    console.log('ｘ座標', item.x, "dir", item.dir);
-  }
-
-  function showScore() {
-    scoreElm.innerHTML = "<strong>スコア：" + score + "</strong>";
-  }
-
-  // フルーツを回転
-  function canvasRotate(img, ang){
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const c = canvas.getContext('2d');
-    c.save();
-    c.translate(img.width/2, img.height/2);
-    c.rotate( ang * Math.PI / 180 );
-    c.translate(-img.width/2, -img.height/2);
-    c.drawImage(img, 0, 0,canvas.height,canvas.width,0,0,canvas.height,canvas.width);
-    c.restore();
-    return canvas;
-  }
-
-  // 100ms毎に定期実行
-  async function overlay() {
-    if (timer < 0) {
-      return;
-    }
-    ++timer;
-    // canvasに画像を貼り付ける
-    ctx.drawImage(videoElm, 0, 0, canvasElm.width, canvasElm.height);
-    faceCtx.drawImage(videoElm, 0, 0, canvasElm.width, canvasElm.height);
-
-    // 落ちる処理
-    var otoshita = false;
-    for (var item of items) {
-      var r = canvasRotate(item.ctx, item.angle);
-      ctx.drawImage(r, item.x, item.y, 50, 50);
-      item.y += item.speed;
-      if (item.y> CVS_HEIGHT) {
-        if (item.ctx != dokuringo) {
-          otoshita = true;
-        }
-      }
-      item.angle += item.dir * 10;
-    }
-    if (otoshita) {
-      o_end.play();
-      scoreElm.innerHTML = "落としてしまいました、終了です <strong>スコア：" + score + "</strong>";
-      buttonElm.disabled = false;
-      return;
-    }
-
-    // 顔ランドマーク検出の実行
-    const data = await faceapi.detectSingleFace(faceElm,
-      new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks()
-    if (data) {
-      const det = data.detection;
-      const mrks = data.landmarks.positions;
-      const box = det.box;
-      // 口を表示
-      ctx.beginPath();
-      ctx.moveTo(mrks[UE].x,  mrks[UE].y);          // 上
-      ctx.lineTo(mrks[MIGI].x,  mrks[MIGI].y);      // 右
-      ctx.lineTo(mrks[SHITA].x,  mrks[SHITA].y);    // 下
-      ctx.lineTo(mrks[HIDARI].x,  mrks[HIDARI].y);  // 左
-      ctx.lineTo(mrks[UE].x,  mrks[UE].y);          // 上
-      ctx.stroke();
-      var i = 0;
-      for (;;) {
-        if (i >= items.length) {
-          break;
-        }
-        // 食べた処理
-        if (items[i].y+25 > mrks[UE].y && items[i].y+25 < mrks[SHITA].y && items[i].x+25 > mrks[HIDARI].x && items[i].x+25 < mrks[MIGI].x) {
-          if (items[i].ctx != dokuringo) {
-            o_paku.play();
-            ctx.drawImage(hoshi, items[i].x, items[i].y, 50, 50);
-            score += items[i].speed * 10;
-            showScore();
-            items.splice(i, 1);
-            continue;
-          } else {
-            o_end.play();
-            scoreElm.innerHTML = "毒リンゴを食べました、終了です <strong>スコア：" + score + "</strong>";
-            buttonElm.disabled = false;
-            return;
-          }
-        }
-        ++i;
-      }
-    }
-
-    if (timer == 13) {
-      o_start.play();
-      addItem(true);      // 必ず追加
-      showScore();
-    }
-    if (timer > 13) {
-      addItem(false);     // 追加するかランダム
-    }
-
-    setTimeout(overlay, 100);
-  }
-
-  // カメラ設定
-  const constraints = {
-    audio: false,
-    video: {
-      width: 300,
-      height: 300,
-      facingMode: "user"   // フロントカメラを利用する
-      // facingMode: { exact: "environment" }  // リアカメラを利用する場合
-    }
-  };
-
-  // 開始ボタン
-  buttonElm.addEventListener("click", async function() {
-//  canvasElm.addEventListener("click", async function() {
-    buttonElm.disabled = true;
-    if (!videoOn) {
-      videoOn = true;
-      // カメラを<video>と同期
-      navigator.mediaDevices.getUserMedia(constraints)
-      .then( function(stream) {
-        videoElm.srcObject = stream;
-        videoElm.onloadedmetadata = function(e) {
-          videoElm.play();
-        };
-      })
-      .catch( function(err) {
-        console.log(err.name + ": " + err.message);
-        videoOn = false;
-        timer = -1;       // timer stop
-        scoreElm.innerHTML = "カメラが利用できません、他のアプリでカメラを使っている場合遊べません";
-        buttonElm.disabled = false;
-      });
-    }
-
-    // 開始
-    scoreElm.innerHTML = "ちょっと待ってね";
-    timer = 0;
-    score = 0;
-    items = [];
-    overlay();
-  });
-};
-</script>
-
+<hr />
+<a href="https://github.com/Yoshiaki110/pakupaku/">プログラムソースはこちら</a>
 
 </body>
 </html>

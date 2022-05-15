@@ -10,9 +10,9 @@
 <body>
 <h3>空から落ちてくるフルーツをお口でキャッチ！落としたらゲームオーバー、毒リンゴに気を付けて！</h3>
 <h5>スタートボタンを押すとカメラの使用許可のダイアログが出ます、許可してください。</h5>
-<hr />
+<br />
 <button type="button" id="start">スタート</button>
-<button type="button" id="tweet">画像をツイート</button>
+<button type="button" id="tweet" disabled>画像をツイート</button>
 <hr />
 <video id="camera" width="150" height="100" autoplay muted playsinline></video>
 <canvas id="face" width="150" height="100"></canvas>
@@ -23,12 +23,9 @@
   </div>
 </div>
 <hr />
-<a href="https://github.com/Yoshiaki110/pakupaku/">プログラムソースはこちら</a>
 <br />
 <br />
 フォトスタジオの紹介サービスやっています。<a href="http://ptc.canon.jp">フォトッチ http://ptc.canon.jp </a> 見に来てね！
-
-
 
 <script src="./static/faceapi/js/face-api.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
@@ -38,6 +35,11 @@ const BASEPATH = "./";
 const IMGPATH = BASEPATH + "static/game/pakupaku/";
 const isAuthed = "{{ isAuthed }}";
 console.log('isAuthed', isAuthed);
+
+const PARAMS = (new URL(window.location.href)).searchParams;
+INTERVAL = PARAMS.get('interval') ? Number(PARAMS.get('interval')) : 100;
+SPEED = PARAMS.get('speed') ? Number(PARAMS.get('speed')) : 3;
+NUMBER = PARAMS.get('number') ? Number(PARAMS.get('number')) : 10;
 
 // HTMLロード後に実行
 window.onload = (event)=>{
@@ -165,13 +167,13 @@ async function init() {
   // 落ちフルーツの追加
   function addItem(first) {
     if (!first) {
-      if (Math.random() * 10 < 9) {    // ２割の確率で出現しない
+      if (Math.random() * 100 > NUMBER) {    // １割の確率で出現しない
         return;
       }
     }
     var arr = [dokuringo,ichigo,kiwi,melon,mikan,momo,suika];
     var c = arr[Math.floor(Math.random() * 7)];
-    var speed = 3 + Math.floor(Math.random() * 4);
+    var speed = SPEED + Math.floor(Math.random() * 4);
     var item = {
       "x": 50 + Math.floor(Math.random() * (CVS_WIDTH - 150)),
       "y": 0,
@@ -230,6 +232,7 @@ async function init() {
       o_end.play();
       scoreElm.innerHTML = "落としてしまいました、終了です <strong>スコア：" + score + "</strong>";
       buttonElm.disabled = false;
+      tweetElm.disabled = false;
       return;
     }
 
@@ -266,6 +269,7 @@ async function init() {
             o_end.play();
             scoreElm.innerHTML = "毒リンゴを食べました、終了です <strong>スコア：" + score + "</strong>";
             buttonElm.disabled = false;
+            tweetElm.disabled = false;
             return;
           }
         }
@@ -282,7 +286,7 @@ async function init() {
       addItem(false);     // 追加するかランダム
     }
 
-    setTimeout(overlay, 50);
+    setTimeout(overlay, INTERVAL);
   }
 
   // カメラ設定
@@ -300,6 +304,7 @@ async function init() {
   buttonElm.addEventListener("click", async function() {
 //  canvasElm.addEventListener("click", async function() {
     buttonElm.disabled = true;
+    tweetElm.disabled = true;
     if (!videoOn) {
       videoOn = true;
       // カメラを<video>と同期
@@ -316,6 +321,7 @@ async function init() {
         timer = -1;       // timer stop
         scoreElm.innerHTML = "カメラが利用できません、他のアプリでカメラを使っている場合遊べません";
         buttonElm.disabled = false;
+        tweetElm.disabled = false;
       });
     }
 
