@@ -22,7 +22,7 @@ IMG_TBL = {}
 
 # ツイート
 def tweet(auth, imgfile):
-    msg = ''
+    msg = '無料ゲームぱくぱく で遊びました！\nyoshiaki110.github.io/pakupaku\n#ぱくぱく'
     api = tweepy.API(auth)
     media_ids = []
     img = api.media_upload(imgfile)
@@ -121,7 +121,7 @@ def api_img():
     if not uid:
         print('ここにくることはないはず')
         uid = str(str(uuid.uuid4()))
-    if id in AUTH_TBL:
+    if uid in AUTH_TBL:
         print('既にログインしているので、そのままツイート')
         auth = AUTH_TBL[uid]
         tweet(auth, fname)
