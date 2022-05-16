@@ -152,17 +152,17 @@ async function init() {
     // API呼び出し
     axios.post(SERVER + '/api/img', params).then(function(response) {
       console.log('** /api/img');
+      // 未ログイン？
+      if (isAuthed == "False") {
+        // ログイン画面に移行
+        window.location.href = "{{ url_for('twitter_auth') }}"
+      }
       //dt = response.data;
     }).catch(function(error) {
       //alert("エラー:" + error);
       pass
     });
 
-    // 未ログイン？
-    if (isAuthed == "False") {
-        // ログイン画面に移行
-        window.location.href = "{{ url_for('twitter_auth') }}"
-    }
   }
 
   // 落ちフルーツの追加
