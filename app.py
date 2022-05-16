@@ -131,6 +131,7 @@ def api_img():
         IMG_TBL[uid] = fname
 
     #os.remove(fname)
+    print("** /api/img end  " + request.method)
     return jsonify({})
 
 if __name__ == '__main__':
