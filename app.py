@@ -22,7 +22,7 @@ IMG_TBL = {}
 
 # ツイート
 def tweet(auth, imgfile):
-    msg = '無料ゲームぱくぱく で遊びました！\nyoshiaki110.github.io/pakupaku\n#ぱくぱく'
+    msg = '無料ゲームぱくぱく で遊びました！\nyoshiaki110.github.io/pakupaku\n#ぱくぱく\n#自虐\n#無料ゲーム'
     api = tweepy.API(auth)
     media_ids = []
     img = api.media_upload(imgfile)
